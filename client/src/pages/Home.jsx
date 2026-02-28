@@ -1,6 +1,6 @@
 import  { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import io from 'socket.io-client';
 import axios from 'axios';
 

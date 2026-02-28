@@ -17,10 +17,14 @@ const CheckPassword = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!location?.state?._id) {
-      navigate('/email');
-    }
-  }, [])
+
+  const userId = location?.state?._id;
+
+  if (!userId) {
+    navigate('/email');
+  }
+
+}, [location?.state?._id, navigate])
 
 
 
