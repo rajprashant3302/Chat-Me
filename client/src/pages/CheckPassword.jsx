@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import Avatar from '../components/Avatar';
 import { useDispatch } from 'react-redux';
-import { setToken, setUser } from '../redux/userSlice';
+import { setToken } from '../redux/userSlice';
 
 const CheckPassword = () => {
   const [data, setData] = useState({

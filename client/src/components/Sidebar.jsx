@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { IoChatbubbleEllipses } from 'react-icons/io5'
 import { FaUserPlus } from 'react-icons/fa'
 import { BiLogOut } from 'react-icons/bi'
-import { Link, NavLink } from 'react-router-dom'
+import {  NavLink } from 'react-router-dom'
 import Avatar from './Avatar'
 import { useSelector } from 'react-redux'
 import { GoHomeFill } from "react-icons/go";

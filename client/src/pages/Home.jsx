@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import  { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
@@ -10,7 +10,7 @@ import AuthLayouts from '../layout';
 import logo from '../assets/logo.png';
 
 const Home = () => {
-    const user = useSelector(state => state.user);
+    
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();

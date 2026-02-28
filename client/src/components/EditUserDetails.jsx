@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { MdEdit } from "react-icons/md";
 import uploadFile from '../helpers/uploadFile';

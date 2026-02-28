@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { IoSearchOutline } from "react-icons/io5";
 import Loading from './Loading';
 import UserSearchCard from './UserSearchCard';

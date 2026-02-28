@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import  { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import Avatar from './Avatar';
@@ -14,7 +14,6 @@ import Loading from '../components/Loading'
 import moment from 'moment'
 import { RiCheckFill } from "react-icons/ri";
 import { RiCheckDoubleLine } from "react-icons/ri";
-import toast from 'react-hot-toast'
 
 
 const MessagePage = () => {
