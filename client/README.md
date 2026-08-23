@@ -1,70 +1,38 @@
-# Getting Started with Create React App
+# ChatMe Client — Interactive Chat Interface
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The frontend for ChatMe is a responsive React application built with Redux Toolkit, React Router, Socket.io Client, and Tailwind CSS.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🛠️ Features & Enhancements
 
-### `npm start`
+### 1. Draggable & Resizable Square Image Cropper
+- **Interactive Avatar Editor**: Integrates `InteractiveCropper.jsx` with a sliding crop window that allows the user to choose their profile crop box by dragging and resizing.
+- **Strict Blob URL Prevention**: Validates profile picture data states. Submissions are blocked if the URL is a local `blob:` format, ensuring only validated Cloudinary URLs reach the database.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 2. Auto-Logout on Token Expiration
+- **Global Interceptor**: Registered a global response interceptor on Axios. Any backend call yielding `401 Unauthorized` automatically removes local tokens, clears the Redux user state, and redirects to the login screen.
+- **Socket Connection Listener**: Intercepts Socket connection errors; if socket authentication is rejected, the client logs out the user immediately.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 3. Real-Time Chat & Optimistic UI
+- **Instant Previews**: Sent messages are added to the list instantly with a `"Sending..."` state and inputs are cleared.
+- **Delivery States**: Shows `"Sending..."` tick markers, successfully delivered ticks, or a `"Failed"` label with a clickable `[Retry]` link.
+- **Duplication Prevention**: Reconciles optimistic client messages with server records using `clientMessageId` mappings.
+- **Listener Cleanups**: Disconnects and cleans up socket event listeners on component unmounts to prevent event duplication leaks.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## ⚙️ Setup & Configuration
 
-### `npm run build`
+Create a `.env` file in the `client/` folder:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```env
+REACT_APP_BACKEND_URL=http://localhost:8080
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Start App
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm install
+npm start
+```

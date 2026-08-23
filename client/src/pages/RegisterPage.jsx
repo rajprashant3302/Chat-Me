@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Camera } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom'
 import uploadFile from '../helpers/uploadFile'
+import InteractiveCropper from '../components/InteractiveCropper'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
@@ -13,37 +14,56 @@ const RegisterPage = () => {
     profile_pic: ""
   });
 
+  const [previewPic, setPreviewPic] = useState("");
   const [statusMessage, setStatusMessage] = useState({ text: "", type: "" });
-  const navigate=useNavigate()
+  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [rawFile, setRawFile] = useState(null);
+  const [showCropper, setShowCropper] = useState(false);
+  const navigate = useNavigate()
 
-
-  // upload photo section
-  const handleProfilePicChange = async (e) => {
+  // Handle file select
+  const handleProfilePicChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+      setRawFile(e.target.files[0]);
+      setShowCropper(true);
+    }
+  };
 
-      // Show instant preview
-      const localPreviewUrl = URL.createObjectURL(file);
-      setData({ ...data, profile_pic: localPreviewUrl });
+  // Handle cropped result
+  const handleCropped = async (croppedFile) => {
+    setShowCropper(false);
+    setUploadLoading(true);
+    setStatusMessage({ text: "Uploading profile photo...", type: "success" });
 
-      try {
-        // Upload to Cloudinary
-        const uploadPhoto = await uploadFile(file);
+    let localPreviewUrl = "";
+    try {
+      localPreviewUrl = URL.createObjectURL(croppedFile);
+      setPreviewPic(localPreviewUrl);
 
-        setStatusMessage({ text: "Profile Pic Uploaded SuccessFully !", type: "success" });
+      // Upload cropped file to Cloudinary
+      const uploadPhoto = await uploadFile(croppedFile);
 
-        if (uploadPhoto.secure_url) {
-          // Replace local preview with actual Cloudinary URL
-          setData(prev => ({ ...prev, profile_pic: uploadPhoto.secure_url }));
-          URL.revokeObjectURL(localPreviewUrl);
-        } else {
-          console.error("Upload failed: No secure_url returned");
-          setStatusMessage({ text: "Error: No secure URL returned from Cloudinary", type: "error" });
-        }
-      } catch (error) {
-        setStatusMessage({ text: "Error uploading profile picture", type: "error" });
-
+      if (uploadPhoto.secure_url) {
+        setData(prev => ({ ...prev, profile_pic: uploadPhoto.secure_url }));
+        setPreviewPic(uploadPhoto.secure_url);
+        URL.revokeObjectURL(localPreviewUrl);
+        setStatusMessage({ text: "Profile Pic Uploaded Successfully!", type: "success" });
+      } else {
+        console.error("Upload failed: No secure_url returned");
+        setStatusMessage({ text: "Upload failed: Invalid server response", type: "error" });
+        setPreviewPic("");
+        URL.revokeObjectURL(localPreviewUrl);
       }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setStatusMessage({ text: "Error uploading profile picture", type: "error" });
+      setPreviewPic("");
+      if (localPreviewUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+      }
+    } finally {
+      setUploadLoading(false);
     }
   };
 
@@ -51,6 +71,13 @@ const RegisterPage = () => {
   const handlesubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (data.profile_pic && data.profile_pic.startsWith('blob:')) {
+      toast.error("Profile picture upload is still in progress or failed.");
+      return;
+    }
+    if (loading) return;
+    setLoading(true);
+    setStatusMessage({ text: "", type: "" });
     const url = `${process.env.REACT_APP_BACKEND_URL}/api/register`
 
     try {
@@ -63,14 +90,16 @@ const RegisterPage = () => {
           email: "",
           password: "",
           profile_pic: ""
-      })
-      navigate('/email')
-    }
+        })
+        navigate('/email')
+      }
     } catch (error) {
-    toast.error(error?.response?.data?.message);
-    setStatusMessage({ text: "Server not responding !", type: "error" });
+      toast.error(error?.response?.data?.message || "Registration failed. Please try again.");
+      setStatusMessage({ text: error?.response?.data?.message || "Server not responding !", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
 return (
   <div className="mt-6 flex justify-center  ">
@@ -83,6 +112,7 @@ return (
         <div className="relative my-4">
           <img
             src={
+              previewPic ||
               data.profile_pic ||
               `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name || "User")}&backgroundColor=#00acb4`
             }
@@ -203,12 +233,20 @@ return (
         {/* Submit Button */}
         <button
           type="submit"
-          className="mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-[#009ca4] transition"
+          disabled={loading || uploadLoading}
+          className={`mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-[#009ca4] transition ${(loading || uploadLoading) ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          Register
+          {uploadLoading ? "Uploading Photo..." : loading ? "Registering..." : "Register"}
         </button>
 
       </form>
+      {showCropper && (
+        <InteractiveCropper
+          file={rawFile}
+          onCrop={handleCropped}
+          onCancel={() => setShowCropper(false)}
+        />
+      )}
       <p className='text-center mt-4 text-sm'>Already have an account ? <Link to={"/email"} className="hover:text-primary hover:underline">Login</Link></p>
     </div>
   </div>

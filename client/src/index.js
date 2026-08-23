@@ -7,6 +7,21 @@ import { RouterProvider } from 'react-router-dom';
 import router from './routes';
 import { Provider } from 'react-redux'
 import { store } from './redux/store';
+import axios from 'axios';
+import { logout } from './redux/userSlice';
+
+// Global Axios Interceptor to catch 401 unauthorized errors (token expired/invalid)
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      store.dispatch(logout());
+      window.location.href = '/email';
+    }
+    return Promise.reject(error);
+  }
+);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

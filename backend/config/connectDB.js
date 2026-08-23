@@ -1,21 +1,21 @@
-const mongoose= require('mongoose')
+const mongoose = require('mongoose')
 
-async function connectDB(){
-    try{
-        console.log(process.env.MONGODB_URL)
+async function connectDB() {
+    try {
+        if (!process.env.MONGODB_URL) {
+            throw new Error("MONGODB_URL environment variable is missing.");
+        }
         await mongoose.connect(process.env.MONGODB_URL)
-
-        const connection = mongoose.connection
-
-        connection.on('connected',()=>{
-            console.log("Connect to DB")
-        })
-
-        connection.on('error',(error)=>{
-            console.log("Something is wrong in MongoDB ",error)
-        })
-    }catch(error){
-        console.log("Something is wrong ",error)
+        
+        // Listen once to prevent duplicate listeners
+        if (mongoose.connection.listenerCount('error') === 0) {
+            mongoose.connection.on('error', (error) => {
+                console.error("MongoDB runtime connection error:", error)
+            })
+        }
+    } catch (error) {
+        console.error("Database connection failed:", error)
+        throw error // Rethrow to let startup process handle failure
     }
 }
 

@@ -67,12 +67,22 @@ const Home = () => {
             dispatch(setOnlineUser(data));
         });
 
+        socketConnection.on('connect_error', (err) => {
+            console.warn("Socket connection error:", err.message);
+            // Reconnect errors with auth failures trigger logout
+            if (err.message && (err.message.includes("authentication") || err.message.includes("token") || err.message.includes("Rejecting"))) {
+                localStorage.removeItem('token');
+                dispatch(logout());
+                navigate('/email');
+            }
+        });
+
         dispatch(setSocketConnection(socketConnection));
 
         return () => {
             socketConnection.disconnect();
         };
-    }, [dispatch]);
+    }, [dispatch, navigate]);
 
     return (
         <AuthLayouts>

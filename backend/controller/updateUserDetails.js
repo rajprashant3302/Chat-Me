@@ -6,7 +6,15 @@ async function updateUserDetails(request, response) {
         const token = request.cookies.token || ""
         const user = await getUserDetailsFromToken(token)
 
-        const { name, profile_pic,_id } = request.body
+                const { name, profile_pic,_id } = request.body
+        
+        if (profile_pic && profile_pic.startsWith('blob:')) {
+            return response.status(400).json({
+                message: "Invalid profile picture format.",
+                error: true
+            });
+        }
+
         if (!name && !profile_pic) {
             return response.status(400).json({
                 message: "Name and profile_pic are required.",

@@ -29,12 +29,17 @@ export const userSlice = createSlice({
             state.email = ""
             state.profile_pic = ""
             state.token = ""
-            setOnlineUser.socketConnection =null
+            if (state.socketConnection && typeof state.socketConnection.disconnect === 'function') {
+                state.socketConnection.disconnect()
+            }
+            state.socketConnection = null
+            state.onlineUser = []
         },
-        updateUser: (state, action) => ({
-            ...state,
-            ...action.payload
-        }),
+        updateUser: (state, action) => {
+            state.name = action.payload.name
+            state.email = action.payload.email
+            state.profile_pic = action.payload.profile_pic
+        },
         setOnlineUser: (state, action) => {
             state.onlineUser = action.payload
         },

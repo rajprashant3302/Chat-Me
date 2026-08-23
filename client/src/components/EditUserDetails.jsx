@@ -2,14 +2,12 @@ import  { useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { MdEdit } from "react-icons/md";
 import uploadFile from '../helpers/uploadFile';
+import InteractiveCropper from '../components/InteractiveCropper';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useDispatch } from 'react-redux';
 import { updateUser } from '../redux/userSlice';
 import Avatar from './Avatar';
-
-
-
 
 const EditUserDetails = ({ onClose, data }) => {
     const dispatch = useDispatch();
@@ -20,43 +18,71 @@ const EditUserDetails = ({ onClose, data }) => {
         profile_pic: data?.profile_pic || "",
     });
     const [isEditingName, setIsEditingName] = useState(false);
-    
-    
     const [previewPic, setPreviewPic] = useState(null);
-    const handleProfilePicChange = async (e) => {
+    const [uploadLoading, setUploadLoading] = useState(false);
+    const [rawFile, setRawFile] = useState(null);
+    const [showCropper, setShowCropper] = useState(false);
+
+    const handleProfilePicChange = (e) => {
         if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            // Show instant preview
-            const localPreviewUrl = URL.createObjectURL(file);
-            setEditData({ ...editData, profile_pic: localPreviewUrl });
-            try {
-                // Upload to Cloudinary
-                const uploadPhoto = await uploadFile(file);
-                if (uploadPhoto.secure_url) {
-                    // Replace local preview with actual Cloudinary URL
-                    
-                    
-                    
-                    setEditData ({ ...editData, profile_pic: uploadPhoto.secure_url });
-                    URL.revokeObjectURL(localPreviewUrl);
-                    toast.success("Profile pic updated successfully!");
-                    setPreviewPic(null);
-                } else {
+            setRawFile(e.target.files[0]);
+            setShowCropper(true);
+        }
+    };
 
-                    toast.error("Profile pic upload failed");
-                    setPreviewPic(null);
+    const handleCropped = async (croppedFile) => {
+        setShowCropper(false);
+        setUploadLoading(true);
+        toast.loading("Uploading profile photo...", { id: "profile-upload" });
 
+        let localPreviewUrl = null;
+        try {
+            localPreviewUrl = URL.createObjectURL(croppedFile);
+            setPreviewPic(localPreviewUrl);
+
+            // Upload cropped file to Cloudinary
+            const uploadPhoto = await uploadFile(croppedFile);
+
+            if (uploadPhoto.secure_url) {
+                setEditData(prev => ({ ...prev, profile_pic: uploadPhoto.secure_url }));
+                setPreviewPic(uploadPhoto.secure_url);
+                URL.revokeObjectURL(localPreviewUrl);
+                toast.success("Profile pic updated successfully!", { id: "profile-upload" });
+
+                // Automatically save to database immediately so changes persist on modal close
+                const updateUrl = `${process.env.REACT_APP_BACKEND_URL}/api/update-user`;
+                const response = await axios.post(updateUrl, {
+                    _id: editData._id,
+                    name: editData.name,
+                    profile_pic: uploadPhoto.secure_url
+                });
+                if (response.data.success) {
+                    dispatch(updateUser(response.data.data));
                 }
-            } catch (error) {
-                toast.error("Server not responding!");
+            } else {
+                toast.error("Profile pic upload failed. Please try again.", { id: "profile-upload" });
                 setPreviewPic(null);
+                URL.revokeObjectURL(localPreviewUrl);
             }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to upload image.", { id: "profile-upload" });
+            setPreviewPic(null);
+            if (localPreviewUrl) {
+                URL.revokeObjectURL(localPreviewUrl);
+            }
+        } finally {
+            setUploadLoading(false);
         }
     };
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (editData.profile_pic && editData.profile_pic.startsWith('blob:')) {
+            toast.error("Profile picture upload is still in progress or failed.");
+            return;
+        }
         const url = `${process.env.REACT_APP_BACKEND_URL}/api/update-user`;
 
         try {
@@ -112,7 +138,7 @@ const EditUserDetails = ({ onClose, data }) => {
                     <div>
                         {
                             editData.profile_pic && (
-                            <button className='text-sm text-red-600 hover:underline' onClick={(e) => setEditData({ ...editData, profile_pic: "" })}>Remove profile pic</button>
+                            <button type="button" className='text-sm text-red-600 hover:underline' onClick={(e) => setEditData({ ...editData, profile_pic: "" })}>Remove profile pic</button>
                             )
                         }                    
                         </div>
@@ -166,11 +192,19 @@ const EditUserDetails = ({ onClose, data }) => {
 
                     <button
                         type="submit"
-                        className="mt-4 w-full bg-[#00acb4] text-white py-2 rounded-md hover:bg-[#009ca4] transition"
+                        disabled={uploadLoading}
+                        className={`mt-4 w-full bg-[#00acb4] text-white py-2 rounded-md hover:bg-[#009ca4] transition ${uploadLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                        Submit Details
+                        {uploadLoading ? "Uploading Photo..." : "Submit Details"}
                     </button>
                 </form>
+                {showCropper && (
+                    <InteractiveCropper
+                        file={rawFile}
+                        onCrop={handleCropped}
+                        onCancel={() => setShowCropper(false)}
+                    />
+                )}
             </div>
         </div>
     );

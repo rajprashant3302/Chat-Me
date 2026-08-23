@@ -18,6 +18,13 @@ const userSchema = new mongoose.Schema({
     profile_pic :{
         type:String,
         default:""
+    },
+    forgot_password_token: {
+        type: String,
+        default: ""
+    },
+    forgot_password_expiry: {
+        type: Date
     }
 },{
     timestamps :true

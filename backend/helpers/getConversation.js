@@ -1,6 +1,6 @@
 const { ConversationModel } = require("../models/ConversationModel");
 
-const getConversation = async (currentUserId) => {
+const getConversation = async (currentUserId, onlineUsers = new Set()) => {
     if (!currentUserId) return [];
 
     const currentUserConversation = await ConversationModel.find({
@@ -19,11 +19,16 @@ const getConversation = async (currentUserId) => {
         let countUnseenMsg = 0;
         let tickStatus = "single"; // default
 
-        if (lastMsg) {
-            // Determine tick status
-            if (lastMsg.msgByUserId.toString() === currentUserId.toString()) {
+        const senderId = conv.sender?._id;
+        const receiverId = conv.receiver?._id;
+
+        if (lastMsg && senderId && receiverId) {
+            const isLastMsgFromCurrentUser = lastMsg.msgByUserId && lastMsg.msgByUserId.toString() === currentUserId.toString();
+            
+            if (isLastMsgFromCurrentUser) {
                 // Current user is sender
-                if (conv.receiver.online) {
+                const isReceiverOnline = onlineUsers.has(receiverId.toString());
+                if (isReceiverOnline) {
                     tickStatus = "double";
                     if (lastMsg.seen) {
                         tickStatus = "blue";
@@ -31,7 +36,7 @@ const getConversation = async (currentUserId) => {
                 }
             }
             // Count unseen only for receiver
-            if (lastMsg.msgByUserId.toString() !== currentUserId.toString() && !lastMsg.seen) {
+            if (!isLastMsgFromCurrentUser && !lastMsg.seen) {
                 countUnseenMsg += 1;
             }
         }

@@ -1,6 +1,6 @@
 # 💬 Chat-Me — Real-Time Chat Application
 
-Chat-Me is a full-stack real-time chat application built using **Node.js, Express, MongoDB, Socket.io, and Cloudinary**. It supports instant messaging, media sharing, authentication, and persistent conversations.
+Chat-Me is a full-stack real-time chat application built using **Node.js, Express, MongoDB, Socket.io, React, Redux Toolkit, and Cloudinary**. It supports instant messaging, media sharing, authentication, and persistent conversations.
 
 ---
 
@@ -10,41 +10,33 @@ Chat-Me is a full-stack real-time chat application built using **Node.js, Expres
 
 ---
 
-## ✨ Features
+## ✨ Features & Enhancements
 
-* 🔐 User authentication (Signup / Login)
-* 💬 Real-time messaging using Socket.io
-* 🟢 Online / Offline user detection
-* 🖼️ Image sharing using Cloudinary
-* 🎥 Video messaging support
-* 👤 User profile management
-* ✔️ Message seen status
-* 🕓 Conversation history storage
-* 🍪 Cookie-based authentication
-* ⚡ Fast and scalable backend
+* 🔐 **User authentication**: Signup / Login, cookie & bearer token checks.
+* 💬 **Real-time messaging**: Socket.io real-time message exchange.
+* ⚡ **Optimistic UI & Retry**: Sent messages appear instantly as "Sending...", updating to "Sent" (ticks) or "Failed" (with a "Retry" option) depending on acknowledgment.
+* 👤 **Draggable Square Crop**: Interactive avatar cropping overlay (WhatsApp style) allowing users to drag and resize their profile picture.
+* 🔐 **Forgot Password**: Password reset workflow via secure token generation and validation.
+* 📧 **Nodemailer Alerts**: Registration welcome, reset passwords, and password change notification emails.
+* 🟢 **Online status indicator**: Active state checking and ticks on chat list.
+* ⚡ **100+ Concurrency Stability**: Process exception trapping, IP rate-limiting, and SIGINT/SIGTERM graceful server shutdown hooks.
+* 🖼️ **Cloudinary media sharing**: Sharing images and video files.
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-
-* JavaScript
-* HTML
-* CSS
-* Socket.io Client
+- React 19 & Redux Toolkit
+- React Router DOM
+- Socket.io Client
+- Tailwind CSS
 
 ### Backend
-
-* Node.js
-* Express.js
-* Socket.io
-* MongoDB
-* Mongoose
-
-### Cloud Services
-
-* Cloudinary (Image & Video Upload)
+- Node.js & Express.js
+- Socket.io Server
+- MongoDB & Mongoose
+- Nodemailer (SMTP Service)
 
 ---
 
@@ -54,197 +46,62 @@ Chat-Me is a full-stack real-time chat application built using **Node.js, Expres
 Chat-Me/
 │
 ├── backend/
-│   ├── config/
-│   ├── models/
-│   │    ├── UserModel.js
-│   │    └── MessageModel.js
-│   ├── routes/
-│   ├── socket/
-│   ├── index.js
-│   └── package.json
+│   ├── config/          # DB connection
+│   ├── controller/      # API routes implementation
+│   ├── helpers/         # Email helper, token verify, conversation fetcher
+│   ├── models/          # Mongoose Schemas (User, Conversation, Message)
+│   ├── routes/          # Express Routers
+│   ├── socket/          # Socket.io handlers
+│   └── index.js
 │
 ├── client/
 │   ├── src/
-│   ├── public/
+│   │   ├── components/  # Chat, Sidebar, Interactive Cropper, Avatar
+│   │   ├── helpers/     # Crop utility, file upload
+│   │   ├── pages/       # Login, Register, Forgot Password, Reset
+│   │   ├── redux/       # Redux Toolkit slice
+│   │   └── index.js
 │   └── package.json
 │
-└── README.md
-```
-
----
-
-## 🧠 Database Schema
-
-### User Schema
-
-```js
-{
-  name: String,
-  email: String,
-  password: String,
-  profile_pic: String
-}
-```
-
-### Message Schema
-
-```js
-{
-  text: String,
-  image: {
-    imageUrl: String,
-    caption: String
-  },
-  video: {
-    videoUrl: String,
-    caption: String
-  },
-  seen: Boolean,
-  msgByUserId: ObjectId
-}
-```
-
-### Conversation Schema
-
-```js
-{
-  sender: ObjectId,
-  receiver: ObjectId,
-  messages: [ObjectId]
-}
+└── Readme.md            # Root Documentation
 ```
 
 ---
 
 ## ⚙️ Installation & Setup
 
-### 1️⃣ Clone Repository
+### 1️⃣ Configure Environment Variables
 
-```bash
-git clone https://github.com/rajprashant3302/Chat-Me.git
-cd Chat-Me
+Create `.env` inside `backend/`:
+```env
+PORT=8080
+MONGODB_URL=mongodb://localhost:27017/chatme
+FRONTEND_URL=http://localhost:3000
+JWT_SECRET_KEY=your_secret_key
+
+# SMTP Credentials
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
 ```
 
----
+Create `.env` inside `client/`:
+```env
+REACT_APP_BACKEND_URL=http://localhost:8080
+```
 
-## ▶️ Start Backend Server
+### 2️⃣ Run Backend
 
 ```bash
 cd backend
 npm install
-node index.js
+npm start
 ```
 
-Backend runs on:
-
-```
-http://localhost:8080
-```
-
----
-
-## ▶️ Start Client
-
-Open new terminal:
+### 3️⃣ Run Client
 
 ```bash
 cd client
 npm install
 npm start
 ```
-
-Client runs on:
-
-```
-http://localhost:3000
-```
-
----
-
-## ☁️ Cloudinary Configuration
-
-Create `.env` file inside backend folder:
-
-```
-MONGO_URL=your_mongodb_url
-FRONTEND_URL=http://localhost:3000
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-JWT_SECRET_KEY=your_secret_key
-```
-
----
-
-## 🔌 Socket.io Features
-
-* Real-time messaging
-* Live user status
-* Instant message delivery
-* Seen status updates
-
----
-
-## 📡 API Features
-
-### Authentication
-
-* Register user
-* Login user
-* Logout user
-
-### Messaging
-
-* Send message
-* Fetch conversations
-* Fetch messages
-* Upload media
-
----
-
-## 🖼️ Media Support
-
-Supports:
-
-* Text messages
-* Image messages (Cloudinary)
-* Video messages (Cloudinary)
-
----
-
-## 🔒 Security Features
-
-* Password encryption
-* Unique email enforcement
-* Cookie authentication
-* Protected routes
-
----
-
-## 🚀 Future Improvements
-
-* Group chat support
-* Typing indicator
-* Voice messages
-* Push notifications
-* Message reactions
-* File sharing
-
----
-
-## 👨‍💻 Author
-
-**Prashant Raj**
-
-GitHub:
-https://github.com/rajprashant3302
-
----
-
-## ⭐ Support
-
-If you like this project, please give it a ⭐ on GitHub.
-
----
+Client runs on `http://localhost:3000`.

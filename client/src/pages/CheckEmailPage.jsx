@@ -10,14 +10,15 @@ const CheckEmailPage = () => {
   });
 
   const [statusMessage, setStatusMessage] = useState({ text: "", type: "" });
-  const navigate=useNavigate()
-
-
-
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate()
 
   const handlesubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (loading) return;
+    setLoading(true);
+    setStatusMessage({ text: "", type: "" });
     const url = `${process.env.REACT_APP_BACKEND_URL}/api/email`
 
     try {
@@ -28,16 +29,16 @@ const CheckEmailPage = () => {
         setStatusMessage({ text: "Email Verified !", type: "success" });
         setData({
           email: ""
-      })
-      navigate('/password' , {state:response?.data.data})
-      
-
-    }
+        })
+        navigate('/password' , {state:response?.data.data})
+      }
     } catch (error) {
-    toast.error(error?.response?.data?.message);
-    setStatusMessage({ text: "Server not responding !", type: "error" });
+      toast.error(error?.response?.data?.message || "Server not responding. Please try again.");
+      setStatusMessage({ text: error?.response?.data?.message || "Server not responding !", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
 return (
   <div className="mt-6 flex justify-center  ">
@@ -96,9 +97,10 @@ return (
         {/* Submit Button */}
         <button
           type="submit"
-          className="mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-[#009ca4] transition"
+          disabled={loading}
+          className={`mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-[#009ca4] transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          Validate Email
+          {loading ? "Validating..." : "Validate Email"}
         </button>
 
       </form>

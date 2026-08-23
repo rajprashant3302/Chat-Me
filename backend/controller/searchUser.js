@@ -1,22 +1,25 @@
 
 const UserModel = require('../models/UserModel')
-async function searchUser(request,response){
+
+async function searchUser(request, response) {
     try {
-        const {search} =request.body
+        const { search } = request.body
 
-        const query=new RegExp(search,"i","g")
+        // Escape regex special characters to prevent crashes
+        const escapedSearch = (search || "").replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const query = new RegExp(escapedSearch, "i")
 
-        const user=await UserModel.find({
-            "$or" : [
-                {"name" : query},
-                {"email" : query}
+        const user = await UserModel.find({
+            "$or": [
+                { "name": query },
+                { "email": query }
             ]
         }).select("-password")
 
         return response.json({
-            message : "all user",
-            data : user,
-            success : true
+            message: "all user",
+            data: user,
+            success: true
         })
      } catch (error) {
         return response.status(500).json({

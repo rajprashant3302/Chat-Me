@@ -16,6 +16,13 @@ async function userDetails(request, response) {
 
         const user = await getUserDetailsFromToken(token);
 
+        if (!user) {
+            return response.status(401).json({
+                message: "Unauthorized: Invalid or expired token",
+                logout: true
+            });
+        }
+
         // Recreate cookie automatically if it was missing but token was valid
         if (!tokenFromCookie) {
             response.cookie("token", token, {

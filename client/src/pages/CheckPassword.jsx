@@ -10,31 +10,27 @@ const CheckPassword = () => {
   const [data, setData] = useState({
     password: "",
   });
-
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
 
   useEffect(() => {
-
-  const userId = location?.state?._id;
-
-  if (!userId) {
-    navigate('/email');
-  }
-
-}, [location?.state?._id, navigate])
-
-
+    const userId = location?.state?._id;
+    if (!userId) {
+      navigate('/email');
+    }
+  }, [location?.state?._id, navigate])
 
   const handlesubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (loading) return;
+    setLoading(true);
     const url = `${process.env.REACT_APP_BACKEND_URL}/api/password`
 
     try {
-
       const response = await axios({
         method: 'post',
         url: url,
@@ -47,19 +43,18 @@ const CheckPassword = () => {
 
       toast.success(response.data.message);
 
-      if (!response.data.success) {
+      if (response.data.success) {
         dispatch(setToken(response.data?.token))
         localStorage.setItem('token', response.data?.token)
-        console.log("data", response)
         setData({
           password: ""
         })
+        navigate('/')
       }
-      navigate('/')
     } catch (error) {
-
-      toast.error(error?.response?.data?.message);
-
+      toast.error(error?.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -115,9 +110,10 @@ const CheckPassword = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-[#009ca4] transition"
+            disabled={loading}
+            className={`mt-4 w-full bg-primary text-white py-2 rounded-md hover:bg-[#009ca4] transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
 
         </form>

@@ -7,6 +7,7 @@ import Home from '../pages/Home'
 import MessagePage from '../components/MessagePage'
 import AuthLayouts from '../layout'
 import ForgotPassword from '../pages/ForgotPassword'
+import ResetPassword from '../pages/ResetPassword'
 import AudioCall from '../pages/AudioCall'
 import VideoCall from '../pages/VideoCall'
 
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
             {
                 path: "forgot-password",
                 element: <AuthLayouts><ForgotPassword /></AuthLayouts>
+            },
+            {
+                path: "reset-password/:token",
+                element: <AuthLayouts><ResetPassword /></AuthLayouts>
             },
             {
                 path: "audiocall",

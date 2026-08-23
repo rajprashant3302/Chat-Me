@@ -51,6 +51,14 @@ const MessagePage = () => {
 
   const [loading, setLoading] = useState(false)
   const [allMessage, setAllMessage] = useState([])
+  const [optimisticMessages, setOptimisticMessages] = useState([])
+
+  const generateUUID = () => {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'uuid-' + Math.random().toString(36).substring(2, 15) + '-' + Date.now().toString(36);
+  };
 
   const handleUploadImageVideoOpen = () => {
     setOpenImageVideoUpload(!openImageVideoUpload);
@@ -90,52 +98,116 @@ const MessagePage = () => {
       video: { ...prev.video, videoUrl: "", caption: "" }
     }));
   };
+
+  const attemptSendMessage = (msgPayload, clientMsgId) => {
+    const isSocketConnected = socketConnection && socketConnection.connected;
+
+    if (!isSocketConnected) {
+      // Mark as failed immediately if socket is offline
+      setOptimisticMessages(prev => prev.map(opt => 
+        opt.clientMessageId === clientMsgId ? { ...opt, status: "failed" } : opt
+      ));
+      return;
+    }
+
+    socketConnection.emit('new-message', {
+      sender: user?._id,
+      receiver: params.userId,
+      text: msgPayload.text,
+      image: msgPayload.image,
+      video: msgPayload.video,
+      msgByUserId: user?._id,
+      clientMessageId: clientMsgId
+    });
+
+    // Timeout to fail message after 8 seconds
+    setTimeout(() => {
+      setOptimisticMessages(prev => prev.map(opt => {
+        if (opt.clientMessageId === clientMsgId && opt.status === "sending") {
+          return { ...opt, status: "failed" };
+        }
+        return opt;
+      }));
+    }, 8000);
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (message.text || message.image.imageUrl || message.video.videoUrl) {
-      if (socketConnection) {
-        
-        socketConnection.emit('new-message', {
-          sender: user?._id,
-          receiver: params.userId,
-          text: message?.text,
-          image: message?.image,
-          video: message?.video,
-          msgByUserId: user?._id
-        })
+    
+    // Prevent sending empty/whitespace-only messages
+    const hasText = message.text && message.text.trim().length > 0;
+    const hasImage = !!message.image.imageUrl;
+    const hasVideo = !!message.video.videoUrl;
 
-        setMessage({
-          text: "",
-          image: {
-            imageUrl: "",
-            caption: ""
-          },
-          video: {
-            videoUrl: "",
-            caption: ""
-          }
-        })
+    if (hasText || hasImage || hasVideo) {
+      const clientMessageId = generateUUID();
 
-      }
+      const optimisticMsg = {
+        _id: clientMessageId,
+        clientMessageId,
+        text: message.text,
+        image: { ...message.image },
+        video: { ...message.video },
+        msgByUserId: user?._id,
+        createdAt: new Date().toISOString(),
+        seen: false,
+        status: "sending"
+      };
+
+      // Add to optimistic UI list
+      setOptimisticMessages(prev => [...prev, optimisticMsg]);
+
+      // Clear input state immediately
+      setMessage({
+        text: "",
+        image: { imageUrl: "", caption: "" },
+        video: { videoUrl: "", caption: "" }
+      });
+      setOpenImageVideoUpload(false);
+
+      attemptSendMessage(optimisticMsg, clientMessageId);
     }
-  }
+  };
 
+  const handleRetry = (failedMsg) => {
+    // Set status back to sending
+    setOptimisticMessages(prev => prev.map(opt => 
+      opt.clientMessageId === failedMsg.clientMessageId ? { ...opt, status: "sending", createdAt: new Date().toISOString() } : opt
+    ));
+    attemptSendMessage(failedMsg, failedMsg.clientMessageId);
+  };
 
   useEffect(() => {
     if (socketConnection) {
       socketConnection.emit('message-page', params.userId);
       socketConnection.emit('seen', params.userId)
-      socketConnection.on('message-user', (data) => {
+
+      const handleMessageUser = (data) => {
         setDataUser(data);
-      });
+      };
 
-      socketConnection.on('message', (data) => {
-
+      const handleMessage = (data) => {
         setAllMessage(data);
+        // Remove optimistic messages that have been successfully saved/received
+        setOptimisticMessages(prev => prev.filter(opt => 
+          !data.some(dbMsg => dbMsg.clientMessageId === opt.clientMessageId)
+        ));
+      };
 
-      })
+      socketConnection.on('message-user', handleMessageUser);
+      socketConnection.on('message', handleMessage);
+
+      return () => {
+        socketConnection.off('message-user', handleMessageUser);
+        socketConnection.off('message', handleMessage);
+      };
     }
-  }, [socketConnection, params.userId, user]);
+  }, [socketConnection, params.userId]);
+
+  const combinedMessages = [
+    ...allMessage,
+    ...optimisticMessages.filter(opt => !allMessage.some(dbMsg => dbMsg.clientMessageId === opt.clientMessageId))
+  ];
 
   return (
     <div className="relative h-[calc(100vh-56px)] flex flex-col">
@@ -178,11 +250,12 @@ const MessagePage = () => {
           {/* Messages will be mapped here later */}
 
           {
-            allMessage.map((msg, idx) => {
+            combinedMessages.map((msg, idx) => {
+              const isSender = user._id === msg.msgByUserId;
               return (
                 <div
-                  key={idx}
-                  className={`rounded w-fit max-w-[280px] md:max-w-[350px] p-1 py-1 my-1 mx-2 ${user._id === msg.msgByUserId ? "ml-auto bg-teal-200" : "bg-white"
+                  key={msg.clientMessageId || msg._id || idx}
+                  className={`rounded w-fit max-w-[280px] md:max-w-[350px] p-1 py-1 my-1 mx-2 ${isSender ? "ml-auto bg-teal-200" : "bg-white"
                     }`}
                 >
                   {/* Image block */}
@@ -195,7 +268,7 @@ const MessagePage = () => {
                       />
                       {msg?.image?.caption && (
                         <p
-                          className={`px-2 ${user._id === msg.msgByUserId ? "bg-teal-200" : "bg-white"
+                          className={`px-2 ${isSender ? "bg-teal-200" : "bg-white"
                             }`}
                         >
                           {msg?.image?.caption}
@@ -214,7 +287,7 @@ const MessagePage = () => {
                       />
                       {msg?.video?.caption && (
                         <p
-                          className={`px-2 ${user._id === msg.msgByUserId ? "bg-teal-200" : "bg-white"
+                          className={`px-2 ${isSender ? "bg-teal-200" : "bg-white"
                             }`}
                         >
                           {msg?.video?.caption}
@@ -225,24 +298,37 @@ const MessagePage = () => {
 
                   {/* Text block */}
                   {msg.text && (
-                    <p className="px-2 break-words  leading-none">{msg.text}</p>
+                    <p className="px-2 break-words leading-none">{msg.text}</p>
                   )}
 
                   {/* Time + Tick below message */}
-                  <p className="text-xs ml-auto w-fit flex items-center gap-1 text-black">
-                    {moment(msg.createdAt).format("hh:mm")}
-                    {user._id === msg.msgByUserId && (
+                  <div className="text-[10px] ml-auto w-fit flex items-center gap-1.5 text-slate-500 mt-1 select-none">
+                    <span>{moment(msg.createdAt).format("hh:mm")}</span>
+                    {isSender && (
                       <>
-                        {msg.seen ? (
-                          <RiCheckDoubleLine size={12} className="text-green-950" />
+                        {msg.status === "sending" ? (
+                          <span className="text-[9px] italic text-slate-400">Sending...</span>
+                        ) : msg.status === "failed" ? (
+                          <span className="flex items-center gap-1 text-red-500 text-[9px]">
+                            Failed 
+                            <button 
+                              type="button" 
+                              onClick={() => handleRetry(msg)}
+                              className="underline text-blue-500 hover:text-blue-700 font-medium cursor-pointer"
+                            >
+                              Retry
+                            </button>
+                          </span>
+                        ) : msg.seen ? (
+                          <RiCheckDoubleLine size={12} className="text-blue-500" title="Seen" />
                         ) : datauser.online ? (
-                          <RiCheckDoubleLine size={12} className="text-slate-500" />
+                          <RiCheckDoubleLine size={12} className="text-slate-400" title="Delivered" />
                         ) : (
-                          <RiCheckFill size={12} className="text-slate-500" />
+                          <RiCheckFill size={12} className="text-slate-400" title="Sent" />
                         )}
                       </>
                     )}
-                  </p>
+                  </div>
                 </div>
               );
             })

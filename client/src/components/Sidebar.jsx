@@ -63,10 +63,8 @@ const handleLogout = async () => {
         if (socketConnection) {
             socketConnection.emit('sidebar', user._id)
 
-            socketConnection.on('conversation', (data) => {
-
-
-                const conversationUserData = data.map((conversationUser, index) => {
+            const handleConversation = (data) => {
+                const conversationUserData = data.map((conversationUser) => {
                     if (conversationUser?.sender?._id === conversationUser?.receiver?._id) {
                         return {
                             ...conversationUser,
@@ -85,11 +83,16 @@ const handleLogout = async () => {
                         }
                     }
                 })
-
                 setAllUser(conversationUserData)
-            })
+            }
+
+            socketConnection.on('conversation', handleConversation)
+
+            return () => {
+                socketConnection.off('conversation', handleConversation)
+            }
         }
-    }, [socketConnection, user])
+    }, [socketConnection, user._id])
 
 
     return (
