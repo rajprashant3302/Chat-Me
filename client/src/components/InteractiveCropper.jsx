@@ -193,56 +193,62 @@ const InteractiveCropper = ({ file, onCrop, onCancel }) => {
                 <div 
                     ref={containerRef}
                     className="relative w-full max-h-[300px] bg-slate-900 flex justify-center items-center overflow-hidden border border-slate-300 rounded"
+                    style={{ height: '300px' }}
                 >
                     {imageSrc && (
-                        <img
-                            ref={imgRef}
-                            src={imageSrc}
-                            alt="Crop target"
-                            onLoad={handleImageLoad}
-                            className="max-w-full max-h-[300px] object-contain pointer-events-none"
-                        />
-                    )}
-
-                    {/* Semi-transparent Dark Overlays outside the crop area */}
-                    {renderedSize.width > 0 && (
-                        <>
-                            {/* Top overlay */}
-                            <div className="absolute bg-black bg-opacity-50" style={{ left: 0, top: 0, width: '100%', height: `${crop.y}px` }} />
-                            {/* Bottom overlay */}
-                            <div className="absolute bg-black bg-opacity-50" style={{ left: 0, top: `${crop.y + crop.size}px`, width: '100%', height: `${renderedSize.height - (crop.y + crop.size)}px` }} />
-                            {/* Left overlay */}
-                            <div className="absolute bg-black bg-opacity-50" style={{ left: 0, top: `${crop.y}px`, width: `${crop.x}px`, height: `${crop.size}px` }} />
-                            {/* Right overlay */}
-                            <div className="absolute bg-black bg-opacity-50" style={{ left: `${crop.x + crop.size}px`, top: `${crop.y}px`, width: `${renderedSize.width - (crop.x + crop.size)}px`, height: `${crop.size}px` }} />
-                        </>
-                    )}
-
-                    {/* Draggable Square Crop Box */}
-                    {renderedSize.width > 0 && (
-                        <div
-                            onMouseDown={(e) => handleStart(e, 'drag')}
-                            onTouchStart={(e) => handleStart(e, 'drag')}
-                            className="absolute border-2 border-[#00acb4] cursor-move flex items-center justify-center"
-                            style={{
-                                left: `${crop.x}px`,
-                                top: `${crop.y}px`,
-                                width: `${crop.size}px`,
-                                height: `${crop.size}px`,
-                                boxShadow: '0 0 0 4000px rgba(0, 0, 0, 0.35)'
-                            }}
+                        <div 
+                            style={renderedSize.width > 0 ? { width: `${renderedSize.width}px`, height: `${renderedSize.height}px`, position: 'relative' } : { position: 'relative' }}
+                            className="relative flex justify-center items-center"
                         >
-                            {/* Highlight corner indicators */}
-                            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white -mt-[2px] -ml-[2px]" />
-                            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white -mt-[2px] -mr-[2px]" />
-                            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white -mb-[2px] -ml-[2px]" />
-                            
-                            {/* Bottom-right Resizing Handle */}
-                            <div
-                                onMouseDown={(e) => handleStart(e, 'resize')}
-                                onTouchStart={(e) => handleStart(e, 'resize')}
-                                className="absolute bottom-0 right-0 w-5 h-5 bg-[#00acb4] border border-white cursor-se-resize -mb-[8px] -mr-[8px] rounded-full shadow z-10 flex items-center justify-center hover:scale-110 active:scale-95 transition"
+                            <img
+                                ref={imgRef}
+                                src={imageSrc}
+                                alt="Crop target"
+                                onLoad={handleImageLoad}
+                                className={renderedSize.width > 0 ? "w-full h-full object-contain pointer-events-none" : "max-w-full max-h-[300px] object-contain pointer-events-none"}
                             />
+
+                            {/* Semi-transparent Dark Overlays outside the crop area */}
+                            {renderedSize.width > 0 && (
+                                <>
+                                    {/* Top overlay */}
+                                    <div className="absolute bg-black bg-opacity-50" style={{ left: 0, top: 0, width: '100%', height: `${crop.y}px` }} />
+                                    {/* Bottom overlay */}
+                                    <div className="absolute bg-black bg-opacity-50" style={{ left: 0, top: `${crop.y + crop.size}px`, width: '100%', height: `${renderedSize.height - (crop.y + crop.size)}px` }} />
+                                    {/* Left overlay */}
+                                    <div className="absolute bg-black bg-opacity-50" style={{ left: 0, top: `${crop.y}px`, width: `${crop.x}px`, height: `${crop.size}px` }} />
+                                    {/* Right overlay */}
+                                    <div className="absolute bg-black bg-opacity-50" style={{ left: `${crop.x + crop.size}px`, top: `${crop.y}px`, width: `${renderedSize.width - (crop.x + crop.size)}px`, height: `${crop.size}px` }} />
+                                </>
+                            )}
+
+                            {/* Draggable Square Crop Box */}
+                            {renderedSize.width > 0 && (
+                                <div
+                                    onMouseDown={(e) => handleStart(e, 'drag')}
+                                    onTouchStart={(e) => handleStart(e, 'drag')}
+                                    className="absolute border-2 border-[#00acb4] cursor-move flex items-center justify-center"
+                                    style={{
+                                        left: `${crop.x}px`,
+                                        top: `${crop.y}px`,
+                                        width: `${crop.size}px`,
+                                        height: `${crop.size}px`,
+                                        boxShadow: '0 0 0 4000px rgba(0, 0, 0, 0.35)'
+                                    }}
+                                >
+                                    {/* Highlight corner indicators */}
+                                    <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-white -mt-[2px] -ml-[2px]" />
+                                    <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-white -mt-[2px] -mr-[2px]" />
+                                    <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-white -mb-[2px] -ml-[2px]" />
+                                    
+                                    {/* Bottom-right Resizing Handle */}
+                                    <div
+                                        onMouseDown={(e) => handleStart(e, 'resize')}
+                                        onTouchStart={(e) => handleStart(e, 'resize')}
+                                        className="absolute bottom-0 right-0 w-5 h-5 bg-[#00acb4] border border-white cursor-se-resize -mb-[8px] -mr-[8px] rounded-full shadow z-10 flex items-center justify-center hover:scale-110 active:scale-95 transition"
+                                    />
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

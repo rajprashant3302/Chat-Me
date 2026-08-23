@@ -20,6 +20,8 @@ const MessagePage = () => {
   const params = useParams();
   const socketConnection = useSelector(state => state?.user?.socketConnection);
   const user = useSelector(state => state.user);
+  const onlineUser = useSelector(state => state?.user?.onlineUser);
+  const isOnline = onlineUser.includes(params.userId);
 
   const [openImageVideoUpload, setOpenImageVideoUpload] = useState(false);
   const currentMessage = useRef(null)
@@ -227,8 +229,8 @@ const MessagePage = () => {
           />
           <div className='flex flex-col'>
             <h3 className='font-semibold text-lg  text-ellipsis line-clamp-1'>{datauser.name || "Loading..."}</h3>
-            <p className='text-slate-600 text-sm'>
-              {datauser.online ? <span className='text-primary'>Online</span> : "Offline"}
+            <p className='text-xs text-slate-400'>
+              {isOnline ? <span className='text-primary'>Online</span> : "Offline"}
             </p>
           </div>
         </div>
@@ -321,7 +323,7 @@ const MessagePage = () => {
                           </span>
                         ) : msg.seen ? (
                           <RiCheckDoubleLine size={12} className="text-blue-500" title="Seen" />
-                        ) : datauser.online ? (
+                        ) : isOnline ? (
                           <RiCheckDoubleLine size={12} className="text-slate-400" title="Delivered" />
                         ) : (
                           <RiCheckFill size={12} className="text-slate-400" title="Sent" />

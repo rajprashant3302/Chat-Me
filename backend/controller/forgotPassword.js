@@ -34,19 +34,23 @@ async function forgotPassword(request, response) {
             console.log("=====================================================\n")
 
             // Send actual email via helper
-            await sendEmail({
-                to: email,
-                subject: "Reset Your Password - ChatMe",
-                text: `Hi ${user.name},\n\nYou requested a password reset. Please click the link below to set a new password:\n\n${resetUrl}\n\nThis link is valid for 1 hour.\n\nBest regards,\nChatMe Team`,
-                html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
-                         <h2>Password Reset Request</h2>
-                         <p>Hi <b>${user.name}</b>,</p>
-                         <p>You requested to reset your password. Please click the link below to set a new password:</p>
-                         <p><a href="${resetUrl}" style="background-color: #00acb4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
-                         <p>This link is valid for 1 hour. If you didn't request this, you can ignore this email.</p>
-                         <p>Best regards,<br>ChatMe Team</p>
-                       </div>`
-            });
+            try {
+                await sendEmail({
+                    to: email,
+                    subject: "Reset Your Password - ChatMe",
+                    text: `Hi ${user.name},\n\nYou requested a password reset. Please click the link below to set a new password:\n\n${resetUrl}\n\nThis link is valid for 1 hour.\n\nBest regards,\nChatMe Team`,
+                    html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                             <h2>Password Reset Request</h2>
+                             <p>Hi <b>${user.name}</b>,</p>
+                             <p>You requested to reset your password. Please click the link below to set a new password:</p>
+                             <p><a href="${resetUrl}" style="background-color: #00acb4; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+                             <p>This link is valid for 1 hour. If you didn't request this, you can ignore this email.</p>
+                             <p>Best regards,<br>ChatMe Team</p>
+                           </div>`
+                });
+            } catch (emailError) {
+                console.error("Failed to send forgot password email:", emailError);
+            }
         }
 
         return response.status(200).json({

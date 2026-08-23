@@ -39,18 +39,22 @@ async function resetPassword(request, response) {
         await user.save()
 
         // Send Reset Confirmation Email
-        await sendEmail({
-            to: user.email,
-            subject: "Your password was successfully reset - ChatMe",
-            text: `Hi ${user.name},\n\nThis is a confirmation email that the password for your ChatMe account was successfully updated.\n\nIf you did not make this change, please contact support immediately.\n\nBest regards,\nChatMe Team`,
-            html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
-                     <h2>Password Updated Successfully</h2>
-                     <p>Hi <b>${user.name}</b>,</p>
-                     <p>This is a confirmation email that your password for ChatMe has been successfully reset.</p>
-                     <p>If you did not perform this change, please contact support immediately.</p>
-                     <p>Best regards,<br>ChatMe Team</p>
-                   </div>`
-        });
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: "Your password was successfully reset - ChatMe",
+                text: `Hi ${user.name},\n\nThis is a confirmation email that the password for your ChatMe account was successfully updated.\n\nIf you did not make this change, please contact support immediately.\n\nBest regards,\nChatMe Team`,
+                html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                         <h2>Password Updated Successfully</h2>
+                         <p>Hi <b>${user.name}</b>,</p>
+                         <p>This is a confirmation email that your password for ChatMe has been successfully reset.</p>
+                         <p>If you did not perform this change, please contact support immediately.</p>
+                         <p>Best regards,<br>ChatMe Team</p>
+                       </div>`
+            });
+        } catch (emailError) {
+            console.error("Failed to send reset confirmation email:", emailError);
+        }
 
         return response.status(200).json({
             message: "Password reset successfully.",
