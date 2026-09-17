@@ -39,17 +39,17 @@ async function registerUser(request, response) {
         const userSave = await user.save()
 
         // Send Welcome Email
-        await sendEmail({
-            to: email,
-            subject: "Welcome to ChatMe!",
-            text: `Hi ${name},\n\nYour account has been successfully created on ChatMe. Welcome aboard!\n\nBest regards,\nChatMe Team`,
-            html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
-                     <h2>Welcome to ChatMe!</h2>
-                     <p>Hi <b>${name}</b>,</p>
-                     <p>Your account has been successfully created. You can now log in and start chatting!</p>
-                     <p>Best regards,<br>ChatMe Team</p>
-                   </div>`
-        });
+        // await sendEmail({
+        //     to: email,
+        //     subject: "Welcome to ChatMe!",
+        //     text: `Hi ${name},\n\nYour account has been successfully created on ChatMe. Welcome aboard!\n\nBest regards,\nChatMe Team`,
+        //     html: `<div style="font-family: Arial, sans-serif; padding: 20px;">
+        //              <h2>Welcome to ChatMe!</h2>
+        //              <p>Hi <b>${name}</b>,</p>
+        //              <p>Your account has been successfully created. You can now log in and start chatting!</p>
+        //              <p>Best regards,<br>ChatMe Team</p>
+        //            </div>`
+        // });
 
         return response.status(201).json({
             message: "User Created Successfully !",
